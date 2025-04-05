@@ -4,8 +4,6 @@
 name: Fetch Leetcode submissions
 
 on:
-  push:
-    branches: [ "main" ]
   schedule:
     - cron: "50 23 * * *"  # runs at 23:50 at night and saves the today submissions
   workflow_dispatch:     # Manual run button
