@@ -131,7 +131,3 @@ jobs:
 
 Feel free to open issues or contribute ideas!
 ```
-
----
-
-Let me know if you want me to save this as a file or directly add it to your project.
