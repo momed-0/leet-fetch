@@ -2,33 +2,20 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 var (
 	username = os.Getenv("LEETCODE_USERNAME")
 	session  = os.Getenv("LEETCODE_SESSION")
-	connStr  = os.Getenv("DATABASE_URL")
 )
 
 func main() {
-
-	conn, err := pgx.Connect(context.Background(), connStr)
-	if err != nil {
-		fmt.Println("❌ Failed to connect to Supabase:", err)
-		os.Exit(1)
-	}
-	defer conn.Close(context.Background())
-	fmt.Println("✅ Connected to Supabase")
-
 	submissions := getTodayAcceptedSubmissions()
 	fmt.Printf("\n✅ Solved today: %d problems\n\n", len(submissions))
 
@@ -38,7 +25,7 @@ func main() {
 		description := getProblemDescription(sub.TitleSlug)
 		code := getSubmissionCodeByID(sub.ID)
 
-		err := insertSubmissionToDB(conn, sub, code, description)
+		err := insertSubmissionToSupabase(sub, code, description)
 		if err != nil {
 			fmt.Println("❌ Error inserting:", err)
 		} else {
@@ -187,24 +174,58 @@ func stringToInt64(s string) (int64, error) {
 	return strconv.ParseInt(s, 10, 64)
 }
 
-func insertSubmissionToDB(conn *pgx.Conn, sub Submission, code string, description string) error {
+func insertSubmissionToSupabase(sub Submission, code string, description string) error {
+	supabaseUrl := os.Getenv("SUPABASE_URL")
+	supabaseKey := os.Getenv("SUPABASE_ANON_KEY")
+
+	client := &http.Client{}
 	timestampInt, _ := strconv.ParseInt(sub.Timestamp, 10, 64)
-	timestamp := time.Unix(timestampInt, 0)
+	timestamp := time.Unix(timestampInt, 0).Format(time.RFC3339)
 
-	_, err := conn.Exec(context.Background(), `
-	INSERT INTO leetcode_questions (slug, title, description)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (slug) DO UPDATE
-		SET description = EXCLUDED.description
-	`, sub.TitleSlug, sub.Title, description)
-	if err != nil {
-		return err
+	// 1. UPSERT leetcode_questions
+	questionPayload := map[string]interface{}{
+		"slug":        sub.TitleSlug,
+		"title":       sub.Title,
+		"description": description,
 	}
-	_, err = conn.Exec(context.Background(), `
-		INSERT INTO leetcode_submissions (
-			submission_id, question_slug, title, submitted_at, language, status, code, description
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`, sub.ID, sub.TitleSlug, sub.Title, timestamp, "C++", "Accepted", code, description)
 
-	return err
+	qPayloadBytes, _ := json.Marshal(questionPayload)
+	qReq, _ := http.NewRequest("POST", supabaseUrl+"/rest/v1/leetcode_questions", bytes.NewBuffer(qPayloadBytes))
+	qReq.Header.Set("apikey", supabaseKey)
+	qReq.Header.Set("Authorization", "Bearer "+supabaseKey)
+	qReq.Header.Set("Content-Type", "application/json")
+	qReq.Header.Set("Prefer", "resolution=merge-duplicates") // enables UPSERT
+
+	qRes, err := client.Do(qReq)
+	if err != nil || qRes.StatusCode >= 300 {
+		return fmt.Errorf("question upsert failed: %v", err)
+	}
+	defer qRes.Body.Close()
+
+	// 2. Insert leetcode_submissions
+	subPayload := map[string]interface{}{
+		"submission_id": sub.ID,
+		"question_slug": sub.TitleSlug,
+		"title":         sub.Title,
+		"submitted_at":  timestamp,
+		"language":      "C++",
+		"status":        "Accepted",
+		"code":          code,
+		"description":   description,
+	}
+
+	sPayloadBytes, _ := json.Marshal(subPayload)
+	sReq, _ := http.NewRequest("POST", supabaseUrl+"/rest/v1/leetcode_submissions", bytes.NewBuffer(sPayloadBytes))
+	sReq.Header.Set("apikey", supabaseKey)
+	sReq.Header.Set("Authorization", "Bearer "+supabaseKey)
+	sReq.Header.Set("Content-Type", "application/json")
+
+	sRes, err := client.Do(sReq)
+	if err != nil || sRes.StatusCode >= 300 {
+		return fmt.Errorf("submission insert failed: %v", err)
+	}
+	defer sRes.Body.Close()
+
+	return nil
 }
+
