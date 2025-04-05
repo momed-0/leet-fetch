@@ -1,0 +1,34 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Fetch Leetcode submissions
+
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: "50 23 * * *"  # runs at 23:50 at night and saves the today submissions
+  workflow_dispatch:     # Manual run button
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    env:
+      LEETCODE_USERNAME: ${{ secrets.LEETCODE_USERNAME }}
+      LEETCODE_SESSION: ${{ secrets.LEETCODE_SESSION }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Install Dependencies
+      run: go mod tidy
+
+    - name: Run Script
+      run: go run main.go
