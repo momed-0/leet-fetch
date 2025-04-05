@@ -182,7 +182,7 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 	timestampInt, _ := strconv.ParseInt(sub.Timestamp, 10, 64)
 	timestamp := time.Unix(timestampInt, 0).Format(time.RFC3339)
 
-	// 1. UPSERT leetcode_questions
+	// UPSERT leetcode_questions
 	questionPayload := map[string]interface{}{
 		"slug":        sub.TitleSlug,
 		"title":       sub.Title,
@@ -206,12 +206,8 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 	subPayload := map[string]interface{}{
 		"submission_id": sub.ID,
 		"question_slug": sub.TitleSlug,
-		"title":         sub.Title,
 		"submitted_at":  timestamp,
-		"language":      "C++",
-		"status":        "Accepted",
 		"code":          code,
-		"description":   description,
 	}
 
 	sPayloadBytes, _ := json.Marshal(subPayload)
