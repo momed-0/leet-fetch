@@ -52,10 +52,10 @@ func getTodayAcceptedSubmissions() []Submission {
 			timestamp
 		}
 	}`
-
+	// fetch past 8 submissions
 	variables := map[string]interface{}{
 		"username": username,
-		"limit":    50,
+		"limit":    8,
 	}
 
 	body := map[string]interface{}{
@@ -75,17 +75,7 @@ func getTodayAcceptedSubmissions() []Submission {
 	var data RespData
 	json.NewDecoder(resp.Body).Decode(&data)
 
-	today := time.Now().UTC().Format("2006-01-02")
-	var todayAccepted []Submission
-	for _, s := range data.Data.RecentSubmissionList {
-		tsInt, _ := stringToInt64(s.Timestamp)
-		t := time.Unix(tsInt, 0).UTC().Format("2006-01-02")
-		if t == today {
-			todayAccepted = append(todayAccepted, s)
-		}
-	}
-
-	return todayAccepted
+	return data.Data.RecentSubmissionList
 }
 func getSubmissionCodeByID(id string) string {
 	query := `
