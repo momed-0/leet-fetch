@@ -1,12 +1,11 @@
 # 📘 LeetCode Daily Submission Fetcher
 
-A Go script that fetches all the **accepted LeetCode submissions for today**, retrieves their full code and problem description, and inserts them into a **Supabase database** via HTTP API. Perfect for maintaining a personal revision dashboard and tracking your daily coding progress.
+A Go script that periodically fetches **accepted LeetCode submissions**, retrieves their full code and problem description, and inserts them into a **Supabase database** via HTTP API. Perfect for maintaining a personal revision dashboard and tracking your daily coding progress.
 
 ---
 
 ## ✅ Features
 
-- Fetches **only today's accepted submissions**
 - Retrieves **full code** and **problem description**
 - Inserts data into two Supabase tables:
   - `leetcode_questions`: stores metadata and description
@@ -115,7 +114,6 @@ jobs:
 ---
 
 ## ✅ To Do
-- [ ] Store Tags for each problem
 - [ ] Implement retry logic for failed GraphQL/API requests
 - [ ] Auto-refresh/rotate `LEETCODE_SESSION` cookie (OAuth workaround?)
 
