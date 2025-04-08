@@ -16,7 +16,7 @@ var (
 )
 
 func main() {
-	submissions := getTodayAcceptedSubmissions()
+	submissions := getRecentAcceptedSubmissions()
 	fmt.Printf("\n✅ Solved today: %d problems\n\n", len(submissions))
 
 	for _, sub := range submissions {
@@ -42,7 +42,7 @@ type Submission struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func getTodayAcceptedSubmissions() []Submission {
+func getRecentAcceptedSubmissions() []Submission {
 	query := `
 	query recentAcSubmissions($username: String!, $limit: Int!) {
 		recentAcSubmissionList(username: $username, limit: $limit) {
@@ -192,7 +192,7 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 	}
 	defer qRes.Body.Close()
 
-	// 2. Insert leetcode_submissions
+	// Insert leetcode_submissions
 	subPayload := map[string]interface{}{
 		"submission_id": sub.ID,
 		"question_slug": sub.TitleSlug,
