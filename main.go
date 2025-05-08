@@ -195,7 +195,7 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 	// Insert leetcode_submissions
 	subPayload := map[string]interface{}{
 		"submission_id": sub.ID,
-		"question_slug": sub.TitleSlug,
+		"slug": sub.TitleSlug,
 		"submitted_at":  timestamp,
 		"code":          code,
 	}
