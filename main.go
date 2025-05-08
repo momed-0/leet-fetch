@@ -180,7 +180,7 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 	}
 
 	qPayloadBytes, _ := json.Marshal(questionPayload)
-	qReq, _ := http.NewRequest("POST", supabaseUrl+"/rest/v1/leetcode_questions", bytes.NewBuffer(qPayloadBytes))
+	qReq, _ := http.NewRequest("POST", supabaseUrl+"/rest/v1/questions", bytes.NewBuffer(qPayloadBytes))
 	qReq.Header.Set("apikey", supabaseKey)
 	qReq.Header.Set("Authorization", "Bearer "+supabaseKey)
 	qReq.Header.Set("Content-Type", "application/json")
