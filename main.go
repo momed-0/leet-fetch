@@ -24,7 +24,7 @@ func main() {
 
 		description := getProblemDescription(sub.TitleSlug)
 		code := getSubmissionCodeByID(sub.ID)
-		
+
 		err := insertSubmissionToSupabase(sub, code, description)
 		if err != nil {
 			fmt.Println("❌ Error inserting:", err)
@@ -107,6 +107,7 @@ func getSubmissionCodeByID(id string) string {
 
 	var data RespData
 	json.NewDecoder(resp.Body).Decode(&data)
+
 	return data.Data.SubmissionDetails.Code
 }
 
@@ -213,4 +214,3 @@ func insertSubmissionToSupabase(sub Submission, code string, description string)
 
 	return nil
 }
-
