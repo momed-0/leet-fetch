@@ -107,7 +107,7 @@ func getSubmissionCodeByID(id string) string {
 
 	var data RespData
 	json.NewDecoder(resp.Body).Decode(&data)
-	if(data.Data.SubmissionDetails.Code === nil) {
+	if(data.Data.SubmissionDetails.Code == nil) {
 		fmt.Println("Error! Submission Code is empty!!")
 	}
 	return data.Data.SubmissionDetails.Code
